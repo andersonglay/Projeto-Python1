@@ -1,4 +1,6 @@
 import os
+import tkinter as tk
+from tkinter import messagebox
 
 def validar_nome(nome):
     if not nome:
@@ -9,7 +11,7 @@ def validar_nome(nome):
 
 def validar_matricula(matricula):
     if not matricula.isdigit():
-        raise ValueError("O número de matrícula deve conter apenas números.")
+        raise ValueError("A matrícula deve conter apenas números.")
     return matricula
 
 def validar_telefone(telefone):
@@ -18,50 +20,78 @@ def validar_telefone(telefone):
     return telefone
 
 def escrever_arquivo(nome_arquivo, conteudo):
-    try:
-        with open(nome_arquivo, 'w') as f:
-            f.write(conteudo)
-    except IOError:
-        print("Erro: Não foi possível escrever no arquivo.")
+    with open(nome_arquivo, 'w') as f:
+        f.write(conteudo)
 
 def ler_arquivo(nome_arquivo):
     try:
         with open(nome_arquivo, 'r') as f:
             return f.read()
     except FileNotFoundError:
-        print("Erro: O arquivo não existe.")
+        return "Arquivo não encontrado."
     except IOError:
-        print("Erro ao tentar ler o arquivo.")
+        return "Erro ao ler o arquivo."
 
-def fechar_arquivo(file):
+def excluir_arquivo(nome_arquivo):
     try:
-        file.close()
-    except AttributeError:
-        print("Erro: Tentativa de fechar um arquivo que não foi aberto.")
+        os.remove(nome_arquivo)
+        messagebox.showinfo("Sucesso", "Arquivo excluído com sucesso.")
+    except FileNotFoundError:
+        messagebox.showerror("Erro", "Arquivo não encontrado.")
+    except Exception as e:
+        messagebox.showerror("Erro", f"Erro ao excluir o arquivo: {e}")
 
-def main():
+def cadastrar_aluno():
+    nome = entry_nome.get()
+    matricula = entry_matricula.get()
+    telefone = entry_telefone.get()
+
     try:
-        nome = input("Digite o nome do aluno: ")
         validar_nome(nome)
-        
-        matricula = input("Digite o número de matrícula: ")
         validar_matricula(matricula)
-        
-        telefone = input("Digite o telefone do aluno: ")
         validar_telefone(telefone)
-        
+
         conteudo = f"Nome: {nome}\nMatrícula: {matricula}\nTelefone: {telefone}"
         escrever_arquivo("aluno.txt", conteudo)
-        
-        print("Dados gravados com sucesso!")
-        print("Lendo arquivo salvo:")
-        print(ler_arquivo("aluno.txt"))
-        
+        messagebox.showinfo("Sucesso", "Dados gravados com sucesso.")
+        limpar_campos()
     except ValueError as e:
-        print(f"Erro de validação: {e}")
-    except Exception as e:
-        print(f"Ocorreu um erro inesperado: {e}")
+        messagebox.showerror("Erro de validação", str(e))
 
-if __name__ == "__main__":  
-    main()
+def mostrar_dados():
+    conteudo = ler_arquivo("aluno.txt")
+    txt_dados.delete("1.0", tk.END)
+    txt_dados.insert(tk.END, conteudo)
 
+def limpar_campos():
+    entry_nome.delete(0, tk.END)
+    entry_matricula.delete(0, tk.END)
+    entry_telefone.delete(0, tk.END)
+
+root = tk.Tk()
+root.title("Cadastro de Aluno")
+root.geometry("400x450")
+
+tk.Label(root, text="Nome:").pack()
+entry_nome = tk.Entry(root)
+entry_nome.pack()
+
+tk.Label(root, text="Matrícula:").pack()
+entry_matricula = tk.Entry(root)
+entry_matricula.pack()
+
+tk.Label(root, text="Telefone:").pack()
+entry_telefone = tk.Entry(root)
+entry_telefone.pack()
+
+tk.Button(root, text="Cadastrar", command=cadastrar_aluno).pack(pady=5)
+tk.Button(root, text="Ler Dados", command=mostrar_dados).pack(pady=5)
+tk.Button(root, text="Alterar Dados", command=cadastrar_aluno).pack(pady=5)
+tk.Button(root, text="Excluir Dados", command=lambda: excluir_arquivo("aluno.txt")).pack(pady=5)
+tk.Button(root, text="Sair", command=root.quit).pack(pady=5)
+
+tk.Label(root, text="Dados do Aluno:").pack()
+txt_dados = tk.Text(root, height=10, width=40)
+txt_dados.pack()
+
+root.mainloop()
